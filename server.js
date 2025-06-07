@@ -74,7 +74,6 @@
 // });
 
 
-
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -85,6 +84,30 @@ const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// CORS whitelist setup: add your frontend domain here
+const allowedOrigins = [
+  "https://portfolio-frontend-psi-nine.vercel.app",  // <-- Replace with your Vercel URL
+  "http://localhost:3000",                // for local testing, optional
+];
+
+// Custom CORS middleware to handle origin checking
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests like curl/postman with no origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS policy: This origin is not allowed"));
+    }
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  credentials: true,  // If your frontend needs credentials (cookies, auth)
+}));
+
+// Handle preflight OPTIONS requests for all routes (important for POST with custom headers)
+app.options("*", cors());
 
 // Setup uploads folder and multer storage
 const uploadFolder = path.join(__dirname, "uploads");
@@ -115,10 +138,7 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage, fileFilter });
 
-app.use(cors());
-
-// We need express.json for normal JSON, but for multipart/form-data multer handles it
-// So remove express.json from /api/contact route, keep globally if you want
+// Global middleware for parsing JSON
 app.use(express.json());
 
 // Nodemailer setup
@@ -180,7 +200,7 @@ app.post("/api/contact", upload.single("file"), async (req, res) => {
 
     await transporter.sendMail(autoReply);
 
-    // Optionally delete the file after sending email (clean up)
+    // Delete the uploaded file after sending email (cleanup)
     if (req.file) {
       fs.unlink(req.file.path, (err) => {
         if (err) console.error("Error deleting uploaded file:", err);
