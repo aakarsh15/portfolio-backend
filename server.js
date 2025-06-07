@@ -87,7 +87,7 @@ const PORT = process.env.PORT || 5000;
 
 // CORS whitelist setup: add your frontend domain here
 const allowedOrigins = [
-  "https://portfolio-frontend-five-taupe.vercel.app",  // <-- Replace with your Vercel URL
+  "https://portfolio-frontend-kgiq.vercel.app/",  // <-- Replace with your Vercel URL
   "http://localhost:5173",                // for local testing, optional
 ];
 
